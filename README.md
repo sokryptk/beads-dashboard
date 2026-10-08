@@ -45,3 +45,7 @@ foreign `Host` headers, and requires a per-run token on every write. Issue IDs a
 arguments are passed without a shell.
 
 Options: `--port 7766`, `--no-open`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -1,0 +1,1316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   Design tokens
+   ========================================================================= */
+:root {
+  /* surfaces */
+  --bg-app: #f4f4f5;          /* sidebar + window */
+  --bg-panel: #ffffff;        /* main inset panel */
+  --bg-raised: #ffffff;       /* cards, menus, dialogs */
+  --bg-subtle: #f7f7f8;       /* group headers, columns */
+  --bg-hover: #f0f0f2;
+  --bg-active: #e9e9ec;
+  /* text */
+  --fg: #18181b; --fg-2: #52525b; --fg-3: #8b8b94; --fg-on-accent: #ffffff;
+  /* lines */
+  --line: #e7e7ea; --line-2: #d9d9de;
+  /* accent + semantic */
+  --accent: #5e6ad2; --accent-soft: #5e6ad21f;
+  --red: #e5484d; --orange: #f2711c; --yellow: #e0a300; --green: #2f9e69; --blue: #3b82f6; --purple: #8e4ec6;
+  /* status */
+  --st-todo: #a1a1aa; --st-progress: #e0a300; --st-blocked: #e5484d; --st-done: #5e6ad2; --st-deferred: #a1a1aa;
+  /* elevation */
+  --shadow-1: 0 1px 2px rgba(16,16,20,.05);
+  --shadow-pop: 0 0 0 1px rgba(16,16,20,.06), 0 4px 8px -2px rgba(16,16,20,.08), 0 16px 32px -8px rgba(16,16,20,.16);
+  /* scale */
+  --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px;
+  --fs-xs: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-lg: 15px; --fs-xl: 20px;
+  --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --sidebar-w: 232px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: #0d0d0f; --bg-panel: #141416; --bg-raised: #1b1b1e; --bg-subtle: #18181b;
+    --bg-hover: #1f1f23; --bg-active: #26262b;
+    --fg: #ececee; --fg-2: #a6a6ae; --fg-3: #6e6e78; --fg-on-accent: #ffffff;
+    --line: #232327; --line-2: #2e2e34;
+    --accent: #7c85e8; --accent-soft: #7c85e826;
+    --red: #f2555a; --orange: #f5853f; --yellow: #f0b72f; --green: #3fbf84; --blue: #5b9bf8; --purple: #a875e0;
+    --st-todo: #75757f; --st-progress: #f0b72f; --st-blocked: #f2555a; --st-done: #7c85e8; --st-deferred: #75757f;
+    --shadow-1: none;
+    --shadow-pop: 0 0 0 1px #2c2c32, 0 16px 40px -8px rgba(0,0,0,.7);
+  }
+}
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg-app); color: var(--fg); font: var(--fs-md)/1.5 var(--font); -webkit-font-smoothing: antialiased; font-feature-settings: "cv11", "ss01"; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mono, .issue-id { font-family: var(--mono); font-size: var(--fs-sm); }
+.issue-id { color: var(--fg-3); letter-spacing: -.01em; }
+.muted { color: var(--fg-2); } .faint { color: var(--fg-3); }
+.icon { width: 16px; height: 16px; flex: none; display: block; }
+.icon.sm { width: 14px; height: 14px; }
+[hidden] { display: none !important; }
+
+/* =========================================================================
+   Components
+   ========================================================================= */
+/* Button */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--bg-raised); color: var(--fg); font-size: var(--fs-md); font-weight: 500; white-space: nowrap; box-shadow: var(--shadow-1); }
+.btn:hover { background: var(--bg-hover); }
+.btn:disabled { opacity: .5; pointer-events: none; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--fg-on-accent); }
+.btn-primary:hover { background: var(--accent); filter: brightness(1.08); }
+.btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+.btn-danger:hover { background: var(--red); filter: brightness(1.08); }
+.btn-ghost { background: transparent; border-color: transparent; box-shadow: none; color: var(--fg-2); }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--fg); }
+.btn-sm { height: 24px; padding: 0 8px; font-size: var(--fs-sm); }
+.btn-icon { width: 28px; padding: 0; }
+.btn-icon.btn-sm { width: 24px; }
+.btn.is-on { background: var(--bg-active); color: var(--fg); }
+
+/* Kbd */
+kbd { font: var(--fs-xs) var(--mono); color: var(--fg-3); background: var(--bg-subtle); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: var(--r-sm); padding: 0 4px; line-height: 16px; }
+
+/* Chip (property pill) */
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 7px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg-raised); color: var(--fg-2); font-size: var(--fs-sm); white-space: nowrap; max-width: 100%; min-width: 0; }
+.chip > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--fg-3); }
+.chip.is-human { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 40%, transparent); }
+.chip.is-human .dot { background: var(--orange); }
+button.chip:hover { background: var(--bg-hover); color: var(--fg); }
+
+/* Glyph buttons (priority / status) */
+.glyph { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 0; padding: 0; background: none; border-radius: var(--r-sm); color: var(--fg-2); flex: none; }
+button.glyph:hover { background: var(--bg-hover); }
+.glyph svg { display: block; }
+
+/* Checkbox */
+.check { appearance: none; width: 14px; height: 14px; margin: 0; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--bg-raised); display: inline-grid; place-items: center; cursor: pointer; flex: none; }
+.check:checked { background: var(--accent); border-color: var(--accent); }
+.check:checked::after { content: ""; width: 7px; height: 4px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+
+/* Input */
+.input { height: 28px; border: 1px solid var(--line-2); background: var(--bg-raised); border-radius: var(--r-md); padding: 0 10px; width: 100%; }
+.input:focus, .textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.textarea { width: 100%; border: 1px solid var(--line-2); background: var(--bg-raised); border-radius: var(--r-lg); padding: 8px 10px; resize: vertical; min-height: 64px; line-height: 1.5; }
+.search { position: relative; display: flex; align-items: center; }
+.search .icon { position: absolute; left: 8px; color: var(--fg-3); pointer-events: none; }
+.search .input { padding-left: 28px; height: 28px; width: 200px; background: var(--bg-subtle); border-color: transparent; }
+.search .input:focus { background: var(--bg-raised); }
+
+/* Menu (dropdown / command list) */
+.menu { position: fixed; z-index: 70; width: 248px; max-height: min(420px, 70vh); display: flex; flex-direction: column; background: var(--bg-raised); border-radius: var(--r-lg); box-shadow: var(--shadow-pop); overflow: hidden; }
+.menu:focus { outline: none; }
+.menu-search { border: 0; border-bottom: 1px solid var(--line); background: transparent; height: 36px; padding: 0 12px; outline: none; flex: none; }
+.menu-list { overflow: auto; padding: 4px; }
+.menu-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px 4px; font-size: var(--fs-xs); font-weight: 500; color: var(--fg-3); }
+.menu-item { display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px; border: 0; background: none; border-radius: var(--r-md); text-align: left; color: var(--fg); }
+.menu-item .label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-item .hint { color: var(--fg-3); font-size: var(--fs-sm); }
+.menu-item .tick { color: var(--accent); }
+.menu-item.is-active { background: var(--bg-hover); }
+.menu-item.is-danger { color: var(--red); }
+.menu-item:disabled { color: var(--fg-3); cursor: default; }
+.menu-sep { height: 1px; background: var(--line); margin: 4px -4px; }
+.menu-empty { padding: 10px; color: var(--fg-3); font-size: var(--fs-sm); }
+
+/* Dialog */
+.overlay { position: fixed; inset: 0; z-index: 60; background: rgba(10,10,12,.4); display: grid; place-items: start center; padding: 12vh 16px 16px; animation: fade .12s ease-out; }
+.dialog { width: min(480px, 100%); background: var(--bg-raised); border-radius: var(--r-xl); box-shadow: var(--shadow-pop); animation: pop .14s ease-out; }
+.dialog-body { padding: 18px 20px 16px; }
+.dialog-title { margin: 0 0 4px; font-size: var(--fs-lg); font-weight: 600; letter-spacing: -.01em; }
+.dialog-desc { margin: 0 0 12px; color: var(--fg-2); }
+.dialog-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--line); }
+.dialog-list { margin: 0 0 12px; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: var(--r-lg); max-height: 160px; overflow: auto; }
+.dialog-list li { display: flex; gap: 10px; padding: 6px 10px; border-top: 1px solid var(--line); font-size: var(--fs-sm); }
+.dialog-list li:first-child { border-top: 0; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.callout { display: flex; gap: 8px; padding: 8px 10px; border-radius: var(--r-md); background: color-mix(in srgb, var(--yellow) 12%, transparent); color: var(--fg); font-size: var(--fs-sm); margin: 0 0 10px; }
+.callout .icon { color: var(--yellow); margin-top: 1px; }
+.field-row { display: flex; gap: 8px; align-items: center; font-size: var(--fs-sm); color: var(--fg-2); margin-top: 10px; }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { transform: translateY(4px) scale(.98); opacity: 0; } }
+
+/* Toast */
+.toasts { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 80; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 12px; background: var(--bg-raised); border-radius: var(--r-lg); box-shadow: var(--shadow-pop); max-width: min(460px, calc(100vw - 32px)); animation: pop .14s ease-out; }
+.toast .icon { color: var(--green); }
+.toast.is-error .icon { color: var(--red); }
+.toast-msg { flex: 1; }
+
+/* Selection bar */
+.selbar { position: fixed; bottom: 16px; left: calc(50% + var(--sidebar-w) / 2); transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 12px; background: var(--bg-raised); border-radius: var(--r-lg); box-shadow: var(--shadow-pop); }
+.selbar-count { font-weight: 500; padding-right: 6px; }
+.selbar .divider { width: 1px; height: 16px; background: var(--line-2); margin: 0 4px; }
+
+/* =========================================================================
+   Layout
+   ========================================================================= */
+.app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); height: 100vh; }
+.sidebar { display: flex; flex-direction: column; padding: 8px; gap: 2px; min-width: 0; overflow: auto; }
+.ws { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 6px; border: 0; background: none; border-radius: var(--r-md); text-align: left; font-weight: 600; min-width: 0; }
+.ws:hover { background: var(--bg-hover); }
+.ws-mark { width: 20px; height: 20px; border-radius: 5px; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: var(--fs-xs); font-weight: 600; flex: none; text-transform: uppercase; }
+.ws-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws .icon { color: var(--fg-3); }
+.nav-sec { margin-top: 14px; }
+.nav-head { display: flex; align-items: center; height: 24px; padding: 0 8px; font-size: var(--fs-sm); color: var(--fg-3); font-weight: 500; }
+.nav-item { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px; border: 0; background: none; border-radius: var(--r-md); width: 100%; text-align: left; color: var(--fg-2); font-weight: 500; min-width: 0; }
+.nav-item:hover { background: var(--bg-hover); color: var(--fg); }
+.nav-item[aria-current="page"] { background: var(--bg-active); color: var(--fg); }
+.nav-item .label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-item .count { font-size: var(--fs-sm); color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.nav-item .count.is-alert { color: var(--orange); }
+.nav-item.is-drop { background: var(--accent-soft); color: var(--accent); }
+.nav-epic-dot { width: 8px; height: 8px; border-radius: 2px; border: 1.5px solid var(--green); flex: none; margin: 0 4px; }
+.sidebar-foot { margin-top: auto; padding: 8px; display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--fg-3); }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex: none; }
+.is-offline .live-dot { background: var(--red); }
+
+.panel { margin: 8px 8px 8px 0; background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--r-xl); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.panel-head { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--line); flex: none; }
+.crumbs { display: flex; align-items: center; gap: 6px; min-width: 0; font-weight: 500; white-space: nowrap; }
+.crumbs .sep { color: var(--fg-3); }
+.crumbs .root { color: var(--fg-2); }
+.panel-head .spacer { flex: 1; }
+.filterbar { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; flex: none; }
+.fchip { display: inline-flex; align-items: center; height: 24px; border: 1px solid var(--line-2); border-radius: var(--r-md); overflow: hidden; font-size: var(--fs-sm); background: var(--bg-raised); }
+.fchip > span { padding: 0 8px; display: flex; align-items: center; gap: 5px; height: 100%; }
+.fchip .op { color: var(--fg-3); padding: 0 2px; }
+.fchip .key { color: var(--fg-2); }
+.fchip button { border: 0; border-left: 1px solid var(--line); background: none; height: 100%; padding: 0 6px; color: var(--fg-3); display: grid; place-items: center; }
+.fchip button:hover { color: var(--fg); background: var(--bg-hover); }
+.content { flex: 1; min-height: 0; overflow: auto; }
+
+/* =========================================================================
+   Board
+   ========================================================================= */
+.board { display: flex; gap: 8px; padding: 12px; min-height: 100%; align-items: flex-start; }
+.column { flex: 1 0 280px; max-width: 380px; display: flex; flex-direction: column; border-radius: var(--r-lg); background: var(--bg-subtle); border: 1px solid transparent; padding: 0 6px 6px; }
+.column.is-drop { border-color: var(--accent); background: var(--accent-soft); }
+.column-head { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 4px 0 6px; }
+.column-title { font-weight: 500; }
+.column-count { color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.column-hint { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-3); }
+.column-body { display: flex; flex-direction: column; gap: 6px; }
+.column-empty { padding: 16px 8px; text-align: center; color: var(--fg-3); font-size: var(--fs-sm); border: 1px dashed var(--line-2); border-radius: var(--r-lg); }
+
+.card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 10px 10px 8px 12px; background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1); cursor: pointer; }
+.card:hover { border-color: var(--line-2); }
+.card.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.card.is-dragging { opacity: .4; }
+.card-top { display: flex; align-items: center; gap: 6px; height: 16px; }
+.card-top .check { margin-left: auto; opacity: 0; }
+.card:hover .card-top .check, .card .check:checked, body.is-selecting .card .check { opacity: 1; }
+.card-title { display: flex; gap: 6px; align-items: flex-start; font-weight: 500; line-height: 1.4; }
+.card-title .glyph { width: 16px; height: 18px; }
+.card-title span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card.is-closed .card-title span { color: var(--fg-2); }
+.card-props { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-width: 0; }
+.card-props .chip { max-width: 100%; }
+.card-props .glyph { width: 22px; height: 22px; border: 1px solid var(--line); border-radius: var(--r-md); }
+.card-meta { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--fg-3); }
+.card-meta .is-late { color: var(--orange); }
+
+/* =========================================================================
+   List
+   ========================================================================= */
+.group-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px 0 12px; background: var(--bg-subtle); border-bottom: 1px solid var(--line); font-weight: 500; }
+.group-head .toggle { border: 0; background: none; color: var(--fg-3); padding: 0; display: grid; place-items: center; width: 16px; }
+.group-head .toggle .icon { transition: transform .12s; }
+.group-head.is-collapsed .toggle .icon { transform: rotate(-90deg); }
+.group-head .count { color: var(--fg-3); font-weight: 400; }
+.group-head .desc { color: var(--fg-3); font-weight: 400; font-size: var(--fs-sm); margin-left: 4px; }
+.row { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 12px; border-bottom: 1px solid var(--line); cursor: pointer; min-width: 0; }
+.row:hover { background: var(--bg-hover); }
+.row.is-selected { background: var(--accent-soft); }
+.row .check { opacity: 0; }
+.row:hover .check, .row .check:checked, body.is-selecting .row .check { opacity: 1; }
+.row .issue-id { width: 96px; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-title { flex: 1; min-width: 0; display: flex; gap: 6px; align-items: baseline; overflow: hidden; white-space: nowrap; }
+.row-title .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+.row-title .parent { color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; flex: 0 10 auto; }
+.row-props { display: flex; gap: 4px; flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; justify-content: flex-end; }
+.row-props .chip, .card-props .chip { flex: none; }
+.row-props .chip { max-width: 200px; }
+.row-age { width: 44px; text-align: right; font-size: var(--fs-sm); color: var(--fg-3); font-variant-numeric: tabular-nums; flex: none; }
+.row-age.is-late { color: var(--orange); }
+.empty-state { display: grid; place-items: center; text-align: center; padding: 64px 16px; color: var(--fg-3); }
+.empty-state .icon { width: 28px; height: 28px; margin: 0 auto 10px; }
+.empty-state strong { display: block; color: var(--fg); font-weight: 500; margin-bottom: 2px; }
+
+/* =========================================================================
+   Issue sheet
+   ========================================================================= */
+.sheet-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(10,10,12,.25); animation: fade .12s ease-out; }
+.sheet { position: fixed; z-index: 51; top: 8px; right: 8px; bottom: 8px; width: min(920px, calc(100vw - 16px)); display: flex; flex-direction: column; background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-pop); animation: slide .16s ease-out; }
+@keyframes slide { from { transform: translateX(12px); opacity: 0; } }
+.sheet-head { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--line); flex: none; }
+.sheet-head .crumbs { overflow: hidden; }
+.sheet-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 272px; }
+.sheet-main { overflow: auto; padding: 28px 32px 40px; }
+.sheet-title { margin: 0 0 16px; font-size: var(--fs-xl); line-height: 1.3; font-weight: 600; letter-spacing: -.015em; }
+.doc-sec + .doc-sec { margin-top: 20px; }
+.doc-sec h3 { margin: 0 0 6px; font-size: var(--fs-sm); font-weight: 500; color: var(--fg-3); }
+.doc-sec .txt { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; max-width: 72ch; font-size: 14px; }
+.sub-issues { border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
+.sub-issues .row { height: 36px; padding: 0 10px; }
+.sub-issues .row:last-child { border-bottom: 0; }
+.activity { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+.activity h3 { margin: 0 0 12px; font-size: var(--fs-md); font-weight: 600; }
+.event { display: flex; gap: 10px; align-items: center; padding: 4px 0; font-size: var(--fs-sm); color: var(--fg-2); }
+.event b { color: var(--fg); font-weight: 500; }
+.avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--bg-active); color: var(--fg-2); display: grid; place-items: center; font-size: 10px; font-weight: 600; flex: none; text-transform: uppercase; }
+.comment { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 10px 12px; margin: 8px 0; background: var(--bg-raised); }
+.comment-head { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--fg-3); margin-bottom: 4px; }
+.comment-head b { color: var(--fg); font-weight: 500; }
+.comment .txt { white-space: pre-wrap; overflow-wrap: anywhere; }
+.composer { border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--bg-raised); margin-top: 12px; }
+.composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.composer .textarea { border: 0; background: transparent; min-height: 56px; }
+.composer .textarea:focus { box-shadow: none; }
+.composer-foot { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 6px; }
+
+.props { border-left: 1px solid var(--line); overflow: auto; padding: 16px 12px; }
+.props-sec + .props-sec { margin-top: 18px; }
+.props-head { font-size: var(--fs-sm); color: var(--fg-3); font-weight: 500; padding: 0 6px 6px; }
+.prop { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; min-height: 30px; gap: 8px; padding: 0 6px; }
+.prop-key { color: var(--fg-3); font-size: var(--fs-sm); }
+.prop-val { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: var(--fs-sm); }
+.prop-val > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prop-btn { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 6px; margin-left: -6px; border: 0; background: none; border-radius: var(--r-md); min-width: 0; font-size: var(--fs-sm); text-align: left; }
+.prop-btn:hover { background: var(--bg-hover); }
+.prop-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prop-labels { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 6px; }
+.props-actions { display: flex; flex-direction: column; gap: 2px; }
+.props-actions .btn { justify-content: flex-start; width: 100%; }
+.link { color: inherit; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; cursor: pointer; }
+.link:hover { text-decoration-color: var(--fg-2); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+.mobile-nav { display: none; gap: 2px; }
+@media (max-width: 860px) {
+  :root { --sidebar-w: 0px; }
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .panel { margin: 0; border-radius: 0; border: 0; height: 100vh; }
+  .mobile-nav { display: flex; }
+  .board { overflow-x: auto; scroll-snap-type: x mandatory; }
+  .column { flex-basis: 84vw; scroll-snap-align: start; }
+  .row .issue-id, .row-props, .search .input { display: none; }
+  .sheet-body { grid-template-columns: 1fr; overflow: auto; }
+  .sheet-main { overflow: visible; padding: 20px 16px; }
+  .props { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" aria-label="Navigation">
+    <button class="ws" id="ws" aria-haspopup="menu" title="Switch folder">
+      <span class="ws-mark" id="ws-mark">b</span>
+      <span class="ws-name" id="ws-name">Loading</span>
+      <svg class="icon sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <nav id="nav"></nav>
+    <div class="sidebar-foot" id="live"><span class="live-dot"></span><span id="live-text">Connecting</span></div>
+  </aside>
+
+  <section class="panel">
+    <header class="panel-head">
+      <div class="mobile-nav" id="mobile-nav"></div>
+      <div class="crumbs" id="crumbs"></div>
+      <span class="spacer"></span>
+      <label class="search" title="Search ( / )">
+        <svg class="icon sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="input" id="q" type="search" placeholder="Search" aria-label="Search issues">
+      </label>
+      <button class="btn btn-ghost btn-sm" id="btn-filter" title="Filter (f)"></button>
+      <button class="btn btn-ghost btn-sm" id="btn-display"></button>
+      <button class="btn btn-ghost btn-icon btn-sm" id="btn-refresh" title="Refresh (r)" aria-label="Refresh"></button>
+    </header>
+    <div class="filterbar" id="filterbar" hidden></div>
+    <div class="content" id="content"></div>
+  </section>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+const TOKEN = "__TOKEN__";
+const STALE_DAYS = 14;
+const STALLED_DAYS = 2;
+const PRIO_NAMES = ["Urgent", "High", "Medium", "Low", "Backlog"];
+
+// ---------------------------------------------------------------- utilities
+function localGet(k) { try { return localStorage.getItem("beads." + k); } catch { return null; } }
+function localSet(k, v) { try { localStorage.setItem("beads." + k, v); } catch {} }
+const $ = (s, el = document) => el.querySelector(s);
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k === "style") el.style.cssText = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat(3)) if (kid != null && kid !== false) el.append(kid);
+  return el;
+}
+// replaceChildren that skips empty slots and flattens arrays, like h().
+function put(el, ...kids) { el.replaceChildren(...kids.flat(3).filter(k => k != null && k !== false)); }
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const who = ids => ids.length > 1 ? plural(ids.length, "issue") : ids[0];
+const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+const clip = (s, n) => s.length > n ? s.slice(0, n - 1) + "…" : s;
+
+// Icons: a small Lucide-derived set on a 24px grid.
+const ICONS = {
+  board: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18M15 3v18"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  archive: '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/>',
+  hand: '<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  filter: '<path d="M3 6h18M7 12h10M10 18h4"/>',
+  sliders: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
+  refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+  folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  trash: '<path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  chevron: '<path d="m6 9 6 6 6-6"/>',
+  chevronRight: '<path d="m9 18 6-6-6-6"/>',
+  back: '<path d="m15 18-6-6 6-6"/>',
+  tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor"/>',
+  box: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
+  shapes: '<path d="M8.3 10a.7.7 0 0 1-.63-1.06l3.7-6.1a.7.7 0 0 1 1.23 0l3.7 6.1a.7.7 0 0 1-.63 1.06z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/>',
+  message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  sparkle: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>',
+  alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+  circleCheck: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+};
+function icon(name, cls = "") {
+  const t = document.createElement("template");
+  t.innerHTML = `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+  return t.content.firstChild;
+}
+function svg16(inner) {
+  const t = document.createElement("template");
+  t.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">${inner}</svg>`;
+  return t.content.firstChild;
+}
+
+// ---------------------------------------------------------------- state
+const params = new URLSearchParams(location.search);
+const state = {
+  repo: params.get("repo") || localGet("repo") || "", repoShown: "", found: [],
+  view: "board",
+  issues: [], byId: new Map(), recentDays: 3,
+  selected: new Set(), q: "",
+  filters: [],                       // [{ key: "type" | "label" | "epic" | "priority", value }]
+  order: localGet("order") || "priority",
+  grouping: localGet("grouping") || "status",
+  collapsed: new Set(),
+  open: null, lastOk: null, loading: false,
+};
+
+// ---------------------------------------------------------------- data
+async function api(path, body) {
+  if (!body && state.repo) path += (path.includes("?") ? "&" : "?") + "repo=" + encodeURIComponent(state.repo);
+  const res = await fetch(path, body ? {
+    method: "POST", body: JSON.stringify({ repo: state.repo, ...body }),
+    headers: { "Content-Type": "application/json", "X-Dashboard-Token": TOKEN },
+  } : {});
+  const data = await res.json().catch(() => ({ error: res.statusText }));
+  if (!res.ok || data.error) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+async function load() {
+  if (state.loading) return;
+  state.loading = true;
+  const repo = state.repo;
+  try {
+    const data = await api("/api/issues");
+    if (repo !== state.repo) return;
+    state.repoShown = data.repo;
+    const name = data.repo.split("/").pop();
+    $("#ws-name").textContent = name;
+    $("#ws-mark").textContent = name[0] || "b";
+    document.title = `${name} · Beads`;
+    state.issues = data.issues;
+    state.recentDays = data.recent_days;
+    state.byId = new Map(data.issues.map(i => [i.id, i]));
+    for (const id of [...state.selected]) if (!state.byId.has(id)) state.selected.delete(id);
+    state.lastOk = Date.now();
+    $("#live").classList.remove("is-offline");
+    render();
+  } catch (e) {
+    $("#live").classList.add("is-offline");
+    $("#live-text").textContent = "Can't reach bd";
+    $("#live").title = e.message;
+    if (!state.lastOk) renderEmpty("alert", "Can't load issues", e.message);
+  } finally { state.loading = false; }
+}
+
+async function act(op, ids, extra = {}) {
+  try {
+    const r = await api("/api/action", { op, ids, ...extra });
+    await load();
+    if (state.open) state.byId.has(state.open) ? openSheet(state.open) : closeSheet();
+    return r || true;
+  } catch (e) {
+    toast(e.message, { error: true });
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------- derived
+const DAY = 864e5;
+const days = iso => iso ? (Date.now() - Date.parse(iso)) / DAY : Infinity;
+const isPending = i => i.status !== "closed";
+const isHuman = i => (i.labels || []).includes("human");
+const isBlocked = i => i.status === "blocked" || (i.blocked_by || []).length > 0;
+const isBacklog = i => isPending(i) && (i.priority === 4 || i.status === "deferred");
+const isQuiet = i => isPending(i) && i.status !== "deferred" && i.status !== "pinned"
+  && (days(i.updated_at) > STALE_DAYS || (i.status === "in_progress" && days(i.updated_at) > STALLED_DAYS));
+
+const STATUSES = {
+  todo:     { title: "To do",       empty: "Nothing waiting" },
+  doing:    { title: "In progress", empty: "Nobody is working on anything" },
+  blocked:  { title: "Blocked",     empty: "Nothing is waiting on other issues", hint: "From dependencies" },
+  deferred: { title: "Deferred",    empty: "Nothing deferred" },
+  done:     { title: "Done",        empty: "Nothing closed lately" },
+};
+function statusKey(i) {
+  if (i.status === "closed") return "done";
+  if (i.status === "deferred") return "deferred";
+  if (i.status === "in_progress" || i.status === "hooked") return "doing";
+  if (isBlocked(i)) return "blocked";
+  return "todo";
+}
+function statusLabel(i) {
+  const k = statusKey(i);
+  if (k === "doing" && days(i.updated_at) > STALLED_DAYS) return "Stalled";
+  if (k === "todo" && i.ready) return "Ready";
+  return STATUSES[k].title;
+}
+const onBoard = i => i.issue_type !== "epic" && !isBacklog(i);
+
+function ago(iso) {
+  if (!iso) return "";
+  const s = (Date.now() - Date.parse(iso)) / 1000;
+  if (s < 60) return "now";
+  if (s < 3600) return Math.floor(s / 60) + "m";
+  if (s < 86400) return Math.floor(s / 3600) + "h";
+  if (s < 86400 * 60) return Math.floor(s / 86400) + "d";
+  return Math.floor(s / (86400 * 30)) + "mo";
+}
+const fmt = iso => iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "";
+const fmtDate = iso => iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+
+function matches(i) {
+  for (const f of state.filters) {
+    if (f.key === "type" && i.issue_type !== f.value) return false;
+    if (f.key === "label" && !(i.labels || []).includes(f.value)) return false;
+    if (f.key === "epic" && i.parent !== f.value && i.id !== f.value) return false;
+    if (f.key === "priority" && i.priority !== f.value) return false;
+  }
+  const q = state.q.trim().toLowerCase();
+  return !q || [i.id, i.title, i.description, i.notes, i.design, (i.labels || []).join(" "),
+    state.byId.get(i.parent)?.title].some(t => (t || "").toLowerCase().includes(q));
+}
+const ORDERS = {
+  priority: { label: "Priority", fn: (a, b) => a.priority - b.priority || Date.parse(b.updated_at) - Date.parse(a.updated_at) },
+  updated: { label: "Last updated", fn: (a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at) },
+  oldest: { label: "Least recently updated", fn: (a, b) => Date.parse(a.updated_at) - Date.parse(b.updated_at) },
+  created: { label: "Created", fn: (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at) },
+};
+const byClosed = (a, b) => Date.parse(b.closed_at || b.updated_at) - Date.parse(a.closed_at || a.updated_at);
+
+const VIEWS = [
+  { key: "board", title: "Board", icon: "board", layout: "board", test: onBoard, count: i => onBoard(i) && isPending(i) },
+  { key: "backlog", title: "Backlog", icon: "archive", layout: "backlog", test: isBacklog },
+  { key: "all", title: "All issues", icon: "list", layout: "list", test: isPending },
+  { key: "human", title: "Needs you", icon: "hand", layout: "list", test: i => isPending(i) && isHuman(i), alert: true, saved: true },
+  { key: "quiet", title: "Gone quiet", icon: "clock", layout: "list", test: isQuiet, alert: true, saved: true },
+];
+const currentView = () => VIEWS.find(v => v.key === state.view) || VIEWS[0];
+
+// ---------------------------------------------------------------- glyphs
+function prioGlyph(p) {
+  if (p === 0) return svg16('<rect x="1" y="1" width="14" height="14" rx="3.5" fill="var(--orange)"/><rect x="7.1" y="4" width="1.8" height="5.2" rx=".9" fill="#fff"/><circle cx="8" cy="11.4" r="1.05" fill="#fff"/>');
+  if (p === 4) return svg16([2, 6.5, 11].map(x => `<rect x="${x}" y="7.25" width="3" height="1.5" rx=".75" fill="var(--fg-3)"/>`).join(""));
+  const on = 4 - p;
+  return svg16([[2, 9, 5], [6.5, 6, 8], [11, 3, 11]].map(([x, y, hh], k) =>
+    `<rect x="${x}" y="${y}" width="3" height="${hh}" rx="1" fill="currentColor" opacity="${k < on ? 1 : .25}"/>`).join(""));
+}
+function statusGlyph(key, stalled) {
+  const ring = c => `<circle cx="8" cy="8" r="6" fill="none" stroke="${c}" stroke-width="1.5"/>`;
+  const c = stalled ? "var(--orange)" : "var(--st-progress)";
+  return svg16({
+    todo: ring("var(--st-todo)"),
+    deferred: `<circle cx="8" cy="8" r="6" fill="none" stroke="var(--st-deferred)" stroke-width="1.5" stroke-dasharray="1.6 2"/>`,
+    doing: ring(c) + `<path d="M8 4.5A3.5 3.5 0 0 1 8 11.5Z" fill="${c}"/>`,
+    blocked: ring("var(--st-blocked)") + `<rect x="5" y="7.25" width="6" height="1.5" rx=".75" fill="var(--st-blocked)"/>`,
+    done: `<circle cx="8" cy="8" r="7" fill="var(--st-done)"/><path d="M5 8.2 7.1 10.2 11 6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+  }[key]);
+}
+const issueStatusGlyph = i => statusGlyph(statusKey(i), statusLabel(i) === "Stalled");
+const TYPE_COLORS = { bug: "var(--red)", feature: "var(--accent)", epic: "var(--green)", chore: "var(--fg-3)", task: "var(--blue)", decision: "var(--purple)" };
+
+// ---------------------------------------------------------------- shared pieces
+function prioButton(i, { interactive = true } = {}) {
+  return h(interactive ? "button" : "span", {
+    class: "glyph", title: `Priority: ${PRIO_NAMES[i.priority]}`,
+    "aria-label": `Priority ${PRIO_NAMES[i.priority]}${interactive ? ", change" : ""}`,
+    onclick: interactive ? e => { e.stopPropagation(); priorityMenu(e.currentTarget, [i.id]); } : null,
+  }, prioGlyph(i.priority));
+}
+function statusButton(i, { interactive = true } = {}) {
+  return h(interactive ? "button" : "span", {
+    class: "glyph", title: `Status: ${statusLabel(i)}`, "aria-label": `Status ${statusLabel(i)}${interactive ? ", change" : ""}`,
+    onclick: interactive ? e => { e.stopPropagation(); statusMenu(e.currentTarget, [i.id]); } : null,
+  }, issueStatusGlyph(i));
+}
+function chip(text, { dot, cls = "", title, onclick } = {}) {
+  return h(onclick ? "button" : "span", { class: `chip ${cls}`, title: title || text, onclick },
+    dot ? h("span", { class: "dot", style: `background:${dot}` }) : null, h("span", { text }));
+}
+function propChips(i, { maxLabels = 2, showEpic = true, showComments = true } = {}) {
+  const labels = [...(i.labels || [])].sort((a, b) => (b === "human") - (a === "human"));
+  const out = [];
+  if (i.issue_type !== "task") out.push(chip(cap(i.issue_type), { dot: TYPE_COLORS[i.issue_type] }));
+  for (const l of labels.slice(0, maxLabels)) out.push(l === "human" ? chip("Needs you", { cls: "is-human", dot: "var(--orange)" }) : chip(l, { dot: "var(--fg-3)" }));
+  if (labels.length > maxLabels) out.push(chip(`+${labels.length - maxLabels}`, { title: labels.slice(maxLabels).join(", ") }));
+  const parent = showEpic && i.parent && state.byId.get(i.parent);
+  if (parent && !state.filters.some(f => f.key === "epic")) out.push(h("span", { class: "chip", title: parent.title }, icon("box", "sm"), h("span", { text: clip(parent.title, 26) })));
+  if (showComments && i.comment_count) out.push(h("span", { class: "chip", title: plural(i.comment_count, "comment") }, icon("message", "sm"), h("span", { text: i.comment_count })));
+  return out;
+}
+function selectBox(i) {
+  return h("input", {
+    type: "checkbox", class: "check", checked: state.selected.has(i.id), "aria-label": "Select " + i.id,
+    onclick: e => e.stopPropagation(),
+    onchange: e => { e.target.checked ? state.selected.add(i.id) : state.selected.delete(i.id); render(); },
+  });
+}
+const selectionWith = id => state.selected.has(id) ? [...state.selected] : [id];
+function toggleSelect(id) { state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id); render(); }
+function issueEvents(i) {
+  return {
+    tabindex: "0", draggable: "true",
+    onclick: e => (e.shiftKey || e.metaKey || e.ctrlKey) ? toggleSelect(i.id) : openSheet(i.id),
+    onkeydown: e => { if (e.key === "Enter") openSheet(i.id); if (e.key === "x") toggleSelect(i.id); },
+    oncontextmenu: e => { e.preventDefault(); openMenu({ x: e.clientX, y: e.clientY }, actionsMenu(selectionWith(i.id))); },
+    ondragstart: e => {
+      e.dataTransfer.setData("text/beads", JSON.stringify(selectionWith(i.id)));
+      e.dataTransfer.effectAllowed = "move";
+      e.currentTarget.classList.add("is-dragging");
+    },
+    ondragend: e => e.currentTarget.classList.remove("is-dragging"),
+  };
+}
+
+// ---------------------------------------------------------------- render: chrome
+function render() {
+  renderNav();
+  renderHead();
+  renderFilterbar();
+  if (!state.lastOk) renderEmpty("refresh", "Loading issues", "Reading the tracker with bd…");
+  else ({ board: renderBoard, backlog: renderBacklog, list: renderList })[currentView().layout]();
+  renderSelbar();
+  tickLive();
+}
+
+function navItem(v) {
+  const n = state.issues.filter(v.count || v.test).length;
+  const el = h("button", {
+    class: "nav-item", "aria-current": state.view === v.key ? "page" : null,
+    onclick: () => setView(v.key),
+  }, icon(v.icon), h("span", { class: "label", text: v.title }),
+    state.lastOk ? h("span", { class: `count ${v.alert && n ? "is-alert" : ""}`, text: n || "" }) : null);
+  if (v.key === "backlog") dropZone(el, ids => moveToBacklog(ids), "is-drop");
+  return el;
+}
+function renderNav() {
+  const epics = state.issues.filter(i => isPending(i) && i.issue_type === "epic").sort(ORDERS.priority.fn);
+  const epicFilter = state.filters.find(f => f.key === "epic")?.value;
+  put($("#nav"), 
+    h("div", { class: "nav-sec" }, h("div", { class: "nav-head", text: "Views" }), VIEWS.filter(v => !v.saved).map(navItem)),
+    h("div", { class: "nav-sec" }, h("div", { class: "nav-head", text: "Attention" }), VIEWS.filter(v => v.saved).map(navItem)),
+    epics.length ? h("div", { class: "nav-sec" }, h("div", { class: "nav-head", text: "Epics" }),
+      epics.map(e => h("button", {
+        class: "nav-item", "aria-current": epicFilter === e.id ? "page" : null, title: e.title,
+        onclick: () => setFilter("epic", epicFilter === e.id ? null : e.id),
+      }, h("span", { class: "nav-epic-dot" }), h("span", { class: "label", text: e.title }),
+        h("span", { class: "count", text: state.issues.filter(c => c.parent === e.id && isPending(c)).length || "" })))) : null,
+  );
+  put($("#mobile-nav"), ...VIEWS.filter(v => !v.saved).map(v => h("button", {
+    class: `btn btn-ghost btn-icon btn-sm ${state.view === v.key ? "is-on" : ""}`, title: v.title, "aria-label": v.title, onclick: () => setView(v.key),
+  }, icon(v.icon))));
+}
+function setView(key) { state.view = key; state.selected.clear(); state.collapsed.clear(); render(); $("#content").scrollTop = 0; }
+
+function renderHead() {
+  const v = currentView();
+  put($("#crumbs"), 
+    h("span", { class: "root", text: state.repoShown.split("/").pop() || "Beads" }),
+    h("span", { class: "sep", text: "/" }),
+    h("span", { text: v.title }));
+  const nf = state.filters.length;
+  put($("#btn-filter"), icon("filter", "sm"), nf ? `Filter · ${nf}` : "Filter");
+  $("#btn-filter").classList.toggle("is-on", nf > 0);
+  put($("#btn-display"), icon("sliders", "sm"), "Display");
+  $("#btn-display").hidden = v.layout !== "list";
+  put($("#btn-refresh"), icon("refresh", "sm"));
+}
+
+const FILTER_KEYS = {
+  type: { label: "Type", icon: "shapes", name: v => cap(v) },
+  label: { label: "Label", icon: "tag", name: v => v === "human" ? "Needs you" : v },
+  epic: { label: "Epic", icon: "box", name: v => clip(state.byId.get(v)?.title || v, 40) },
+  priority: { label: "Priority", icon: "sliders", name: v => PRIO_NAMES[v] },
+};
+function setFilter(key, value) {
+  state.filters = state.filters.filter(f => f.key !== key);
+  if (value != null && value !== "") state.filters.push({ key, value });
+  render();
+}
+function renderFilterbar() {
+  const bar = $("#filterbar");
+  bar.hidden = !state.filters.length;
+  put(bar, ...state.filters.map(f => h("span", { class: "fchip" },
+    h("span", { class: "key" }, icon(FILTER_KEYS[f.key].icon, "sm"), FILTER_KEYS[f.key].label),
+    h("span", { class: "op", text: "is" }),
+    h("span", { text: FILTER_KEYS[f.key].name(f.value) }),
+    h("button", { "aria-label": "Remove filter", onclick: () => setFilter(f.key, null) }, icon("x", "sm")))),
+    state.filters.length ? h("button", { class: "btn btn-ghost btn-sm", onclick: () => { state.filters = []; render(); } }, "Clear") : null);
+}
+
+function renderEmpty(ic, title, desc) {
+  put($("#content"), h("div", { class: "empty-state" }, h("div", {}, icon(ic), h("strong", { text: title }), h("span", { text: desc }))));
+}
+
+function tickLive() {
+  if (!state.lastOk || $("#live").classList.contains("is-offline")) return;
+  const a = ago(new Date(state.lastOk).toISOString());
+  $("#live-text").textContent = a === "now" ? "Synced just now" : `Synced ${a} ago`;
+  $("#live").title = state.repoShown;
+}
+
+// ---------------------------------------------------------------- render: board
+function card(i) {
+  const quiet = isQuiet(i);
+  const closed = i.status === "closed";
+  return h("article", { class: `card ${state.selected.has(i.id) ? "is-selected" : ""} ${closed ? "is-closed" : ""}`, ...issueEvents(i) },
+    h("div", { class: "card-top" }, h("span", { class: "issue-id", text: i.id }), selectBox(i)),
+    h("div", { class: "card-title" }, statusButton(i), h("span", { text: i.title })),
+    h("div", { class: "card-props" }, prioButton(i), propChips(i)),
+    h("div", { class: "card-meta" },
+      h("span", { text: closed ? `Closed ${fmtDate(i.closed_at)}` : `Created ${fmtDate(i.created_at)}` }),
+      closed ? null : h("span", { class: quiet ? "is-late" : "", title: `Updated ${fmt(i.updated_at)}`, text: quiet ? `Quiet ${ago(i.updated_at)}` : `Updated ${ago(i.updated_at)}` })),
+  );
+}
+function renderBoard() {
+  const items = state.issues.filter(i => onBoard(i) && matches(i));
+  const cols = ["todo", "doing", "blocked", "done"].map(key => {
+    const s = STATUSES[key];
+    const cards = items.filter(i => statusKey(i) === key).sort(key === "done" ? byClosed : ORDERS.priority.fn);
+    const col = h("section", { class: "column", "aria-label": s.title },
+      h("div", { class: "column-head" }, h("span", { class: "glyph" }, statusGlyph(key)),
+        h("span", { class: "column-title", text: s.title }), h("span", { class: "column-count", text: cards.length }),
+        key === "done" ? h("span", { class: "column-hint", text: `Last ${state.recentDays} days` }) : s.hint ? h("span", { class: "column-hint", text: s.hint }) : null),
+      h("div", { class: "column-body" }, cards.length ? cards.map(card) : h("div", { class: "column-empty", text: s.empty })));
+    dropZone(col, ids => moveTo(key, ids), "is-drop");
+    return col;
+  });
+  put($("#content"), h("div", { class: "board" }, cols));
+}
+
+// ---------------------------------------------------------------- render: lists
+function row(i) {
+  const parent = i.parent && state.byId.get(i.parent);
+  const quiet = isQuiet(i);
+  return h("div", { class: `row ${state.selected.has(i.id) ? "is-selected" : ""}`, ...issueEvents(i) },
+    selectBox(i), prioButton(i), h("span", { class: "issue-id", text: i.id }), statusButton(i),
+    h("div", { class: "row-title" }, h("span", { class: "t", title: i.title, text: i.title }),
+      parent && state.grouping !== "epic" ? h("span", { class: "parent", text: "› " + parent.title }) : null),
+    h("div", { class: "row-props" }, propChips(i, { maxLabels: 1, showEpic: false, showComments: false })),
+    h("span", { class: `row-age ${quiet ? "is-late" : ""}`, title: `Updated ${fmt(i.updated_at)}`, text: ago(i.updated_at) }));
+}
+function group(key, title, glyphEl, items, desc) {
+  const collapsed = state.collapsed.has(key);
+  return [
+    h("div", { class: `group-head ${collapsed ? "is-collapsed" : ""}` },
+      h("button", { class: "toggle", "aria-label": collapsed ? "Expand group" : "Collapse group", "aria-expanded": String(!collapsed),
+        onclick: () => { collapsed ? state.collapsed.delete(key) : state.collapsed.add(key); render(); } }, icon("chevron", "sm")),
+      glyphEl, h("span", { text: title }), h("span", { class: "count", text: items.length }),
+      desc ? h("span", { class: "desc", text: desc }) : null),
+    collapsed ? null : items.map(row),
+  ];
+}
+function renderList() {
+  const items = state.issues.filter(i => currentView().test(i) && matches(i)).sort(ORDERS[state.order].fn);
+  if (!items.length) return renderEmpty("circleCheck", "Nothing here", state.filters.length || state.q ? "No issues match these filters." : "This view is clear.");
+  let groups;
+  if (state.grouping === "status") {
+    groups = ["doing", "todo", "blocked", "deferred"].map(k => [k, STATUSES[k].title, h("span", { class: "glyph" }, statusGlyph(k)), items.filter(i => statusKey(i) === k)]);
+  } else if (state.grouping === "priority") {
+    groups = [0, 1, 2, 3, 4].map(p => ["p" + p, PRIO_NAMES[p], h("span", { class: "glyph" }, prioGlyph(p)), items.filter(i => i.priority === p)]);
+  } else if (state.grouping === "epic") {
+    const epicOf = i => i.issue_type === "epic" ? i.id : (i.parent || "");
+    const keys = [...new Set(items.map(epicOf))]
+      .sort((a, b) => (a === "") - (b === "") || (state.byId.get(a)?.priority ?? 9) - (state.byId.get(b)?.priority ?? 9));
+    groups = keys.map(k => [k || "none", state.byId.get(k)?.title || "No epic", h("span", { class: "glyph" }, icon("box", "sm")), items.filter(i => epicOf(i) === k)]);
+  } else {
+    groups = [["all", "All", null, items]];
+  }
+  put($("#content"), h("div", {}, groups.filter(g => g[3].length).map(g => group(...g))));
+}
+function renderBacklog() {
+  const items = state.issues.filter(i => isBacklog(i) && matches(i));
+  if (!items.length) return renderEmpty("archive", "The backlog is empty", "Drag a card onto Backlog in the sidebar to park it at P4.");
+  const later = items.filter(i => i.status !== "deferred").sort(ORDERS.updated.fn);
+  const ice = items.filter(i => i.status === "deferred").sort(ORDERS.priority.fn);
+  put($("#content"), h("div", {},
+    later.length ? group("someday", "Someday", h("span", { class: "glyph" }, prioGlyph(4)), later, "Low priority. Agents can still pick these up.") : null,
+    ice.length ? group("ice", "On ice", h("span", { class: "glyph" }, statusGlyph("deferred")), ice, "Deferred. Hidden from agents until they wake up.") : null));
+}
+
+// ---------------------------------------------------------------- drag and drop
+function dropZone(el, onDrop, cls) {
+  let depth = 0;
+  el.addEventListener("dragenter", e => { if (e.dataTransfer.types.includes("text/beads")) { depth++; el.classList.add(cls); } });
+  el.addEventListener("dragleave", () => { if (--depth <= 0) { depth = 0; el.classList.remove(cls); } });
+  el.addEventListener("dragover", e => { if (e.dataTransfer.types.includes("text/beads")) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; } });
+  el.addEventListener("drop", e => {
+    e.preventDefault(); depth = 0; el.classList.remove(cls);
+    try { onDrop(JSON.parse(e.dataTransfer.getData("text/beads"))); } catch {}
+  });
+}
+
+// ---------------------------------------------------------------- actions
+async function moveTo(col, ids) {
+  const items = ids.map(id => state.byId.get(id)).filter(i => i && statusKey(i) !== col);
+  if (!items.length) return;
+  if (col === "blocked") return toast("Blocked comes from dependencies. Open the issue to see what it's waiting on.");
+  if (col === "deferred") return deferDialog(items.map(i => i.id));
+  if (col === "done") return closeDialog(items.map(i => i.id));
+  const reopen = items.filter(i => i.status === "closed").map(i => i.id);
+  const stuck = items.filter(i => statusKey(i) === "blocked");
+  if (stuck.length) toast(`${who(stuck.map(i => i.id))} still waits on other issues, so it stays Blocked.`);
+  const undefer = items.filter(i => i.status === "deferred").map(i => i.id);
+  const rest = items.filter(i => i.status !== "closed" && statusKey(i) !== "blocked").map(i => i.id);
+  if (reopen.length && await act("reopen", reopen)) {
+    if (col === "doing") await act("status", reopen, { status: "in_progress" });
+    toast(`Reopened ${who(reopen)}`, { undo: () => act("close", reopen, { reason: "Closed again from the dashboard" }) });
+  }
+  if (undefer.length) await act("undefer", undefer);
+  if (!rest.length) return;
+  const status = col === "doing" ? "in_progress" : "open";
+  const before = rest.map(id => [id, state.byId.get(id).status]);
+  if (await act("status", rest, { status })) {
+    toast(`${col === "doing" ? "Started" : "Moved to To do"}: ${who(rest)}`, {
+      undo: async () => { for (const [id, s] of before) await act("status", [id], { status: s === "in_progress" ? "in_progress" : "open" }); },
+    });
+  }
+}
+async function moveToBacklog(ids) {
+  const live = ids.filter(id => { const i = state.byId.get(id); return i && isPending(i) && i.priority !== 4; });
+  if (!live.length) return toast("Already in the backlog.");
+  await setPriority(live, 4, "Moved to backlog");
+}
+async function setPriority(ids, p, verb) {
+  const before = ids.map(id => [id, state.byId.get(id)?.priority]).filter(([, old]) => old !== p);
+  if (!before.length) return;
+  const changed = before.map(([id]) => id);
+  if (!await act("priority", changed, { priority: p })) return;
+  toast(`${verb || "Priority set to " + PRIO_NAMES[p]}: ${who(changed)}`, {
+    undo: async () => {
+      const groups = {};
+      for (const [id, old] of before) (groups[old] ||= []).push(id);
+      for (const [old, gids] of Object.entries(groups)) await act("priority", gids, { priority: +old });
+    },
+  });
+}
+async function doReopen(ids) { if (await act("reopen", ids)) toast(`Reopened ${who(ids)}`); }
+async function doUndefer(ids) { if (await act("undefer", ids)) toast(`Undeferred ${who(ids)}`); }
+async function doUnclaim(ids) {
+  const held = ids.filter(id => state.byId.get(id)?.status === "in_progress");
+  if (held.length && await act("unclaim", held)) toast(`Released ${who(held)}. Back in To do.`);
+}
+async function toggleHuman(ids, on) {
+  if (await act(on ? "flag_human" : "unflag_human", ids)) toast(on ? `Flagged ${who(ids)} as needing you` : `Cleared "Needs you" on ${who(ids)}`);
+}
+
+// ---------------------------------------------------------------- copy
+function asMarkdown(i, full = true) {
+  if (!full) return `- ${i.id} (${PRIO_NAMES[i.priority]} ${i.issue_type}, ${statusLabel(i).toLowerCase()}): ${i.title}`;
+  const parts = [`**${i.id}**: ${i.title}`, `${PRIO_NAMES[i.priority]} ${i.issue_type}, ${statusLabel(i).toLowerCase()}`];
+  if (i.description) parts.push("", i.description);
+  if (i.design) parts.push("", "Design:", i.design);
+  if (i.acceptance_criteria) parts.push("", "Acceptance:", i.acceptance_criteria);
+  if (i.notes) parts.push("", "Notes:", i.notes);
+  return parts.join("\n");
+}
+async function copy(text, what = "Copied") {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const t = h("textarea", { style: "position:fixed;opacity:0" }); t.value = text;
+    document.body.append(t); t.select(); document.execCommand("copy"); t.remove();
+  }
+  toast(what);
+}
+function copyMany(ids) {
+  const items = ids.map(id => state.byId.get(id)).filter(Boolean);
+  copy(items.length === 1 ? asMarkdown(items[0]) : items.map(i => asMarkdown(i, false)).join("\n"), `Copied ${who(ids)}`);
+}
+const agentPrompt = i => `Work on bd issue ${i.id}: ${i.title}\nRun \`bd show ${i.id} --json\` for details and claim it with \`bd update ${i.id} --claim --json\`.`;
+
+// ---------------------------------------------------------------- Menu component
+// spec: { search?, onSubmit?(text), items: [ "sep" | { head } | { label, icon, glyph, hint, checked, danger, disabled, run, sub } ] }
+let menu = null;
+function closeMenu() { menu?.el.remove(); menu = null; }
+function openMenu(anchor, spec) {
+  closeMenu();
+  const stack = [spec];
+  const el = h("div", { class: "menu", role: "menu", tabindex: "-1" });
+  menu = { el };
+  let active = 0, query = "";
+  const search = h("input", { class: "menu-search", "aria-label": "Filter options" });
+  const list = h("div", { class: "menu-list" });
+  el.append(search, list);
+  const current = () => stack[stack.length - 1];
+  const isAction = it => typeof it !== "string" && !it.head;
+  const visible = () => {
+    const q = query.trim().toLowerCase();
+    return q ? current().items.filter(it => isAction(it) && it.label.toLowerCase().includes(q)) : current().items;
+  };
+  const actionable = () => visible().filter(it => isAction(it) && !it.disabled);
+  const reset = () => { query = ""; search.value = ""; active = 0; };
+  function draw() {
+    const spec = current();
+    search.hidden = !spec.search;
+    search.placeholder = spec.search || "";
+    const items = visible(), acts = actionable();
+    active = Math.max(0, Math.min(active, acts.length - 1));
+    put(list, 
+      stack.length > 1 ? h("button", { class: "menu-item", onclick: () => { stack.pop(); reset(); draw(); } }, icon("back", "sm"), h("span", { class: "label faint", text: "Back" })) : null,
+      ...items.map(it => {
+        if (it === "sep") return h("div", { class: "menu-sep" });
+        if (it.head) return h("div", { class: "menu-head", text: it.head });
+        const idx = acts.indexOf(it);
+        return h("button", {
+          class: `menu-item ${idx === active && idx >= 0 ? "is-active" : ""} ${it.danger ? "is-danger" : ""}`, role: "menuitem", disabled: it.disabled,
+          onmousemove: () => { if (idx >= 0 && idx !== active) { active = idx; draw(); } },
+          onclick: () => choose(it),
+        }, it.glyph ? h("span", { class: "glyph" }, it.glyph) : it.icon ? icon(it.icon, "sm") : null,
+          h("span", { class: "label", text: it.label }),
+          it.hint ? h("span", { class: "hint", text: it.hint }) : null,
+          it.checked ? h("span", { class: "tick" }, icon("check", "sm")) : null,
+          it.sub ? icon("chevronRight", "sm faint") : null);
+      }),
+      items.length ? null : h("div", { class: "menu-empty", text: spec.onSubmit ? "Press Enter to open this folder" : "No matches" }));
+    list.querySelector(".is-active")?.scrollIntoView({ block: "nearest" });
+  }
+  function choose(it) {
+    if (!it || it.disabled) return;
+    if (it.sub) { stack.push(it.sub()); reset(); draw(); (current().search ? search : el).focus(); return; }
+    closeMenu(); it.run?.();
+  }
+  el.addEventListener("keydown", e => {
+    const acts = actionable();
+    if (e.key === "ArrowDown") { e.preventDefault(); active = (active + 1) % Math.max(1, acts.length); draw(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); active = (active - 1 + acts.length) % Math.max(1, acts.length); draw(); }
+    else if (e.key === "ArrowRight" && acts[active]?.sub) { e.preventDefault(); choose(acts[active]); }
+    else if (e.key === "Enter") {
+      e.preventDefault();
+      if (current().onSubmit && query.trim() && !acts.length) { const v = query.trim(); closeMenu(); current().onSubmit(v); }
+      else choose(acts[active]);
+    }
+    else if (e.key === "Escape" || (e.key === "ArrowLeft" && !query && stack.length > 1) || (e.key === "Backspace" && !query && stack.length > 1)) {
+      e.preventDefault(); e.stopPropagation();
+      if (stack.length > 1) { stack.pop(); reset(); draw(); } else closeMenu();
+    }
+  });
+  search.addEventListener("input", () => { query = search.value; active = 0; draw(); });
+  draw();
+  document.body.append(el);
+  const r = anchor instanceof Element ? anchor.getBoundingClientRect() : { left: anchor.x, right: anchor.x, top: anchor.y, bottom: anchor.y };
+  const m = el.getBoundingClientRect();
+  el.style.left = Math.max(8, Math.min(r.left, innerWidth - m.width - 8)) + "px";
+  el.style.top = (r.bottom + m.height + 8 > innerHeight ? Math.max(8, r.top - m.height - 4) : r.bottom + 4) + "px";
+  (spec.search ? search : el).focus();
+}
+document.addEventListener("mousedown", e => { if (menu && !menu.el.contains(e.target)) closeMenu(); }, true);
+
+// menus
+const prioItems = (ids, cur) => PRIO_NAMES.map((n, p) => ({ label: n, glyph: prioGlyph(p), hint: String(p), checked: cur === p, run: () => setPriority(ids, p) }));
+function priorityMenu(anchor, ids) {
+  const cur = ids.length === 1 ? state.byId.get(ids[0])?.priority : null;
+  openMenu(anchor, { search: "Change priority…", items: prioItems(ids, cur) });
+}
+function statusItems(ids) {
+  const items = ids.map(id => state.byId.get(id)).filter(Boolean);
+  const cur = items.length === 1 ? statusKey(items[0]) : null;
+  return [
+    { label: "To do", glyph: statusGlyph("todo"), checked: cur === "todo", run: () => moveTo("todo", ids) },
+    { label: "In progress", glyph: statusGlyph("doing"), checked: cur === "doing", run: () => moveTo("doing", ids) },
+    { label: "Blocked", glyph: statusGlyph("blocked"), checked: cur === "blocked", disabled: true, hint: "Set by dependencies" },
+    { label: "Deferred…", glyph: statusGlyph("deferred"), checked: cur === "deferred", run: () => cur !== "deferred" && deferDialog(ids) },
+    { label: "Done…", glyph: statusGlyph("done"), checked: cur === "done", run: () => cur !== "done" && closeDialog(ids) },
+  ];
+}
+function statusMenu(anchor, ids) { openMenu(anchor, { search: "Change status…", items: statusItems(ids) }); }
+function actionsMenu(ids) {
+  const items = ids.map(id => state.byId.get(id)).filter(Boolean);
+  const one = items.length === 1 ? items[0] : null;
+  const allClosed = items.every(i => i.status === "closed");
+  const out = [];
+  if (!allClosed) {
+    out.push({ label: "Status", icon: "circleCheck", sub: () => ({ search: "Change status…", items: statusItems(ids) }) });
+    out.push({ label: "Priority", icon: "sliders", sub: () => ({ search: "Change priority…", items: prioItems(ids, one?.priority) }) });
+    if (items.some(isHuman)) out.push({ label: "Clear “Needs you”", icon: "hand", run: () => toggleHuman(ids, false) });
+    else out.push({ label: "Flag “Needs you”", icon: "hand", run: () => toggleHuman(ids, true) });
+    if (items.some(i => i.status === "in_progress")) out.push({ label: "Release claim", icon: "user", run: () => doUnclaim(ids) });
+    if (items.some(i => i.priority === 4)) out.push({ label: "Move to board", icon: "board", run: () => setPriority(ids.filter(id => state.byId.get(id)?.priority === 4), 3, "Moved to board") });
+    else out.push({ label: "Move to backlog", icon: "archive", run: () => moveToBacklog(ids) });
+    if (items.some(i => i.status === "deferred")) out.push({ label: "Undefer", icon: "undo", run: () => doUndefer(ids) });
+    out.push("sep");
+  }
+  out.push({ label: "Copy as Markdown", icon: "copy", run: () => copyMany(ids) });
+  if (one) out.push({ label: "Copy ID", icon: "link", hint: one.id, run: () => copy(one.id, "Copied " + one.id) });
+  if (one) out.push({ label: "Copy agent prompt", icon: "sparkle", run: () => copy(agentPrompt(one), "Copied agent prompt") });
+  out.push("sep");
+  if (items.some(i => i.status === "closed")) out.push({ label: "Reopen", icon: "undo", run: () => doReopen(ids) });
+  else out.push({ label: "Close…", icon: "circleCheck", run: () => closeDialog(ids) });
+  out.push({ label: "Delete…", icon: "trash", danger: true, run: () => deleteDialog(ids) });
+  return { search: `Actions for ${who(ids)}…`, items: out };
+}
+function filterMenu(anchor) {
+  const scope = state.issues.filter(i => currentView().test(i));
+  const val = key => state.filters.find(f => f.key === key)?.value;
+  const has = (key, v) => i => key === "label" ? (i.labels || []).includes(v) : key === "epic" ? i.parent === v : key === "priority" ? i.priority === v : i.issue_type === v;
+  const sub = (key, entries) => () => ({ search: `Filter by ${FILTER_KEYS[key].label.toLowerCase()}…`, items: [
+    ...entries.map(([v, label, extra]) => ({ label, ...extra, hint: String(scope.filter(has(key, v)).length), checked: val(key) === v, run: () => setFilter(key, val(key) === v ? null : v) })),
+    ...(val(key) != null ? ["sep", { label: "Remove filter", icon: "x", run: () => setFilter(key, null) }] : []),
+  ] });
+  const pend = state.issues.filter(isPending);
+  const types = [...new Set(pend.map(i => i.issue_type))].sort();
+  const labels = [...new Set(pend.flatMap(i => i.labels || []))].sort();
+  const epics = pend.filter(i => i.issue_type === "epic").sort(ORDERS.priority.fn);
+  const dot = c => h("span", { class: "chip", style: "border:0;padding:0;background:none" }, h("span", { class: "dot", style: `background:${c}` }));
+  openMenu(anchor, { search: "Add filter…", items: [
+    { label: "Priority", icon: "sliders", hint: val("priority") != null ? PRIO_NAMES[val("priority")] : "", sub: sub("priority", PRIO_NAMES.map((n, p) => [p, n, { glyph: prioGlyph(p) }])) },
+    { label: "Type", icon: "shapes", hint: val("type") ? cap(val("type")) : "", sub: sub("type", types.map(t => [t, cap(t), { glyph: dot(TYPE_COLORS[t] || "var(--fg-3)") }])) },
+    { label: "Label", icon: "tag", hint: val("label") ? FILTER_KEYS.label.name(val("label")) : "", sub: sub("label", labels.map(l => [l, l === "human" ? "Needs you" : l, { icon: "tag" }])) },
+    { label: "Epic", icon: "box", hint: val("epic") ? "Set" : "", sub: sub("epic", epics.map(e => [e.id, e.title, { icon: "box" }])) },
+    ...(state.filters.length ? ["sep", { label: "Clear all filters", icon: "x", run: () => { state.filters = []; render(); } }] : []),
+  ] });
+}
+function displayMenu(anchor) {
+  openMenu(anchor, { items: [
+    { head: "Grouping" },
+    ...[["status", "Status"], ["priority", "Priority"], ["epic", "Epic"], ["none", "No grouping"]].map(([k, l]) => ({
+      label: l, checked: state.grouping === k, run: () => { state.grouping = k; localSet("grouping", k); state.collapsed.clear(); render(); } })),
+    { head: "Ordering" },
+    ...Object.entries(ORDERS).map(([k, o]) => ({ label: o.label, checked: state.order === k, run: () => { state.order = k; localSet("order", k); render(); } })),
+  ] });
+}
+function workspaceMenu(anchor) {
+  const found = [...new Set([...recents(), ...state.found])];
+  openMenu(anchor, {
+    search: "Type a folder path, or pick one…",
+    onSubmit: path => switchRepo(path),
+    items: [
+      { head: "Folders with a .beads dir" },
+      ...found.map(p => ({ label: p.replace(/^\/home\/[^/]+/, "~"), icon: "folder", checked: p === state.repoShown, run: () => switchRepo(p) })),
+    ],
+  });
+}
+
+// ---------------------------------------------------------------- Dialog component
+function dialog({ title, desc, body = [], actions }) {
+  const overlay = h("div", { class: "overlay", onmousedown: e => { if (e.target === overlay) done(); } });
+  const done = () => { overlay.remove(); document.removeEventListener("keydown", onKey, true); };
+  const onKey = e => { if (e.key === "Escape") { e.stopPropagation(); done(); } };
+  document.addEventListener("keydown", onKey, true);
+  overlay.append(h("div", { class: "dialog", role: "dialog", "aria-modal": "true", "aria-label": title },
+    h("div", { class: "dialog-body" }, h("h2", { class: "dialog-title", text: title }), desc ? h("p", { class: "dialog-desc", text: desc }) : null, body),
+    h("div", { class: "dialog-foot" }, actions(done))));
+  document.body.append(overlay);
+  overlay.querySelector("textarea, input.input, .btn-primary, .btn-danger")?.focus();
+  return done;
+}
+const issueList = ids => h("ul", { class: "dialog-list" }, ids.map(id => h("li", {}, h("span", { class: "issue-id", text: id }), h("span", { text: state.byId.get(id)?.title || "" }))));
+
+function closeDialog(ids) {
+  const reason = h("textarea", { class: "textarea", rows: 2, placeholder: "Add a reason (saved on the issue)" });
+  dialog({
+    title: `Close ${who(ids)}`, desc: "Closing keeps the history and can be undone. For stale work, close rather than delete.",
+    body: [issueList(ids), h("div", { class: "presets" }, ["Done", "Stale, no longer relevant", "Duplicate", "Won't do"].map(p =>
+      h("button", { class: "chip", onclick: () => { reason.value = p; reason.focus(); } }, h("span", { text: p })))), reason],
+    actions: done => [
+      h("button", { class: "btn", onclick: done }, "Cancel"),
+      h("button", { class: "btn btn-primary", onclick: async e => {
+        e.currentTarget.disabled = true;
+        const r = await act("close", ids, { reason: reason.value });
+        done();
+        if (r) toast(`Closed ${who(ids)}`, { undo: () => act("reopen", ids) });
+      } }, ids.length > 1 ? "Close issues" : "Close issue"),
+    ],
+  });
+}
+function deferDialog(ids) {
+  const until = h("input", { class: "input", placeholder: "tomorrow, next monday, +2w, 2026-11-01" });
+  dialog({
+    title: `Defer ${who(ids)}`, desc: "Deferred issues move to the backlog, and agents stop picking them up. With a date they come back on their own. Leave the date blank to defer indefinitely.",
+    body: [issueList(ids), h("div", { class: "presets" }, ["tomorrow", "next monday", "+2w", "+30d"].map(p =>
+      h("button", { class: "chip", onclick: () => { until.value = p; until.focus(); } }, h("span", { text: p })))), until],
+    actions: done => [
+      h("button", { class: "btn", onclick: done }, "Cancel"),
+      h("button", { class: "btn btn-primary", onclick: async e => {
+        e.currentTarget.disabled = true;
+        const r = await act("defer", ids, { until: until.value });
+        done();
+        if (r) toast(`Deferred ${who(ids)}`, { undo: () => act("undefer", ids) });
+      } }, "Defer"),
+    ],
+  });
+}
+async function deleteDialog(ids) {
+  const note = h("p", { class: "dialog-desc", text: "Checking what depends on this…" });
+  const cascade = h("input", { type: "checkbox", class: "check" });
+  const cascadeRow = h("label", { class: "field-row", hidden: true }, cascade, "Also delete everything that depends on these");
+  dialog({
+    title: `Delete ${who(ids)} permanently?`,
+    body: [issueList(ids), note, cascadeRow],
+    actions: done => [
+      h("button", { class: "btn", onclick: done }, "Cancel"),
+      h("button", { class: "btn", onclick: () => { done(); closeDialog(ids); } }, "Close instead"),
+      h("button", { class: "btn btn-danger", onclick: async e => {
+        e.currentTarget.disabled = true;
+        const r = await act("delete", ids, { cascade: cascade.checked });
+        done();
+        if (r) { ids.forEach(id => state.selected.delete(id)); renderSelbar(); toast(`Deleted ${who(ids)}`); }
+      } }, "Delete"),
+    ],
+  });
+  try {
+    const r = await api("/api/action", { op: "delete_preview", ids });
+    if (r.result.warning) {
+      note.replaceWith(h("div", { class: "callout" }, icon("alert", "sm"), h("span", { text: r.result.warning.replace(/; use --cascade.*$/, "") + ". Deleting leaves them orphaned unless you delete them too." })));
+      cascadeRow.hidden = false;
+    } else note.textContent = "This can't be undone. Links and mentions in other issues are cleaned up.";
+  } catch (e) { note.textContent = e.message; }
+}
+
+// ---------------------------------------------------------------- Issue sheet
+let sheet = null;
+function closeSheet() { sheet?.forEach(el => el.remove()); sheet = null; state.open = null; }
+async function openSheet(id) {
+  const base = state.byId.get(id);
+  if (!base) return;
+  const fresh = state.open !== id;
+  state.open = id;
+  if (!sheet) {
+    const overlay = h("div", { class: "sheet-overlay", onclick: closeSheet });
+    const el = h("aside", { class: "sheet", role: "dialog", "aria-modal": "true" });
+    sheet = [overlay, el];
+    document.body.append(overlay, el);
+  }
+  if (fresh) fillSheet(base, null);
+  try {
+    const full = await api("/api/issue?id=" + encodeURIComponent(id));
+    if (state.open === id) fillSheet({ ...base, ...full }, full);
+  } catch (e) { toast(e.message, { error: true }); }
+}
+function refRow(depId) {
+  const d = state.byId.get(depId);
+  return h("div", { class: "row", tabindex: "0", onclick: () => openSheet(depId), onkeydown: e => { if (e.key === "Enter") openSheet(depId); } },
+    d ? prioButton(d, { interactive: false }) : h("span", { class: "glyph" }),
+    h("span", { class: "issue-id", text: depId }),
+    d ? statusButton(d, { interactive: false }) : h("span", { class: "glyph" }, statusGlyph("done")),
+    h("div", { class: "row-title" }, h("span", { class: "t", text: d ? d.title : "Closed" })));
+}
+function prop(key, value) { return h("div", { class: "prop" }, h("span", { class: "prop-key", text: key }), h("div", { class: "prop-val" }, value)); }
+function fillSheet(i, full) {
+  const el = sheet[1];
+  const parent = i.parent && state.byId.get(i.parent);
+  const section = (title, body) => body ? h("div", { class: "doc-sec" }, h("h3", { text: title }), h("div", { class: "txt", text: body })) : null;
+  const waiting = [...new Set(i.blocked_by || [])];
+  const linked = (full?.dependencies || i.dependencies || []).filter(d => (d.dependency_type || d.type) !== "parent-child" && !waiting.includes(d.id || d.depends_on_id));
+  const children = state.issues.filter(c => c.parent === i.id).sort(ORDERS.priority.fn);
+  const comments = full?.comments || [];
+  const closed = i.status === "closed";
+  const text = h("textarea", { class: "textarea", rows: 2, placeholder: "Leave a comment for whoever picks this up…",
+    onkeydown: e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) post.click(); } });
+  const post = h("button", { class: "btn btn-sm btn-primary", onclick: async e => {
+    if (!text.value.trim()) return text.focus();
+    e.currentTarget.disabled = true;
+    if (await act("comment", [i.id], { text: text.value })) toast("Comment posted");
+  } }, "Comment");
+  el.setAttribute("aria-label", i.title);
+  put(el, 
+    h("header", { class: "sheet-head" },
+      h("div", { class: "crumbs" },
+        h("span", { class: "root", text: state.repoShown.split("/").pop() }), h("span", { class: "sep", text: "/" }),
+        parent ? [h("span", { class: "link root", onclick: () => openSheet(parent.id), text: clip(parent.title, 36) }), h("span", { class: "sep", text: "/" })] : null,
+        h("span", { class: "mono", text: i.id })),
+      h("span", { style: "flex:1" }),
+      h("button", { class: "btn btn-ghost btn-icon btn-sm", title: "Copy ID", "aria-label": "Copy ID", onclick: () => copy(i.id, "Copied " + i.id) }, icon("link", "sm")),
+      h("button", { class: "btn btn-ghost btn-icon btn-sm", title: "More actions", "aria-label": "More actions", onclick: e => openMenu(e.currentTarget, actionsMenu([i.id])) }, icon("more", "sm")),
+      h("button", { class: "btn btn-ghost btn-icon btn-sm", title: "Close (Esc)", "aria-label": "Close", onclick: closeSheet }, icon("x", "sm"))),
+    h("div", { class: "sheet-body" },
+      h("div", { class: "sheet-main" },
+        h("h1", { class: "sheet-title", text: i.title }),
+        section("Description", i.description),
+        section("Design", i.design),
+        section("Done when", i.acceptance_criteria),
+        section("Notes", i.notes),
+        waiting.length ? h("div", { class: "doc-sec" }, h("h3", { text: `Waiting on ${waiting.length}` }), h("div", { class: "sub-issues" }, waiting.map(refRow))) : null,
+        linked.length ? h("div", { class: "doc-sec" }, h("h3", { text: "Related" }), h("div", { class: "sub-issues" }, linked.map(d => refRow(d.id || d.depends_on_id)))) : null,
+        children.length ? h("div", { class: "doc-sec" }, h("h3", { text: `Sub-issues  ${children.filter(c => c.status === "closed").length}/${children.length} done` }), h("div", { class: "sub-issues" }, children.map(c => refRow(c.id)))) : null,
+        h("div", { class: "activity" },
+          h("h3", { text: "Activity" }),
+          h("div", { class: "event" }, h("span", { class: "avatar", text: (i.created_by || "?")[0] }), h("span", {}, h("b", { text: i.created_by || "Someone" }), ` created the issue · ${fmt(i.created_at)}`)),
+          i.started_at ? h("div", { class: "event" }, h("span", { class: "avatar", text: (i.assignee || "?")[0] }), h("span", {}, h("b", { text: i.assignee || "An agent" }), ` started it · ${fmt(i.started_at)}`)) : null,
+          comments.map(c => h("div", { class: "comment" },
+            h("div", { class: "comment-head" }, h("span", { class: "avatar", text: (c.author || "?")[0] }), h("b", { text: c.author || "unknown" }), h("span", { text: fmt(c.created_at) })),
+            h("div", { class: "txt", text: c.text }))),
+          closed ? h("div", { class: "event" }, h("span", { class: "glyph" }, statusGlyph("done")), h("span", { text: `Closed ${fmt(i.closed_at)}${i.close_reason ? ": " + i.close_reason : ""}` })) : null,
+          !closed ? h("div", { class: "composer" }, text, h("div", { class: "composer-foot" }, h("kbd", { text: "Ctrl Enter" }), post)) : null)),
+      h("aside", { class: "props", "aria-label": "Properties" },
+        h("div", { class: "props-sec" },
+          h("div", { class: "props-head", text: "Properties" }),
+          prop("Status", closed ? [issueStatusGlyph(i), h("span", { text: "Done" })]
+            : h("button", { class: "prop-btn", onclick: e => statusMenu(e.currentTarget, [i.id]) }, issueStatusGlyph(i), h("span", { text: statusLabel(i) }))),
+          prop("Priority", h("button", { class: "prop-btn", onclick: e => priorityMenu(e.currentTarget, [i.id]) }, prioGlyph(i.priority), h("span", { text: PRIO_NAMES[i.priority] }))),
+          prop("Type", chip(cap(i.issue_type), { dot: TYPE_COLORS[i.issue_type] || "var(--fg-3)" })),
+          prop("Assignee", i.assignee ? [h("span", { class: "avatar", text: i.assignee[0] }), h("span", { text: i.assignee })] : h("span", { class: "faint", text: "Unclaimed" })),
+          parent ? prop("Epic", h("button", { class: "prop-btn", onclick: () => openSheet(parent.id), title: parent.title }, icon("box", "sm"), h("span", { text: parent.title }))) : null,
+          i.defer_until ? prop("Deferred", h("span", { text: fmt(i.defer_until) })) : null),
+        h("div", { class: "props-sec" },
+          h("div", { class: "props-head", text: "Labels" }),
+          h("div", { class: "prop-labels" },
+            (i.labels || []).map(l => l === "human" ? chip("Needs you", { cls: "is-human", dot: "var(--orange)" }) : chip(l, { dot: "var(--fg-3)" })),
+            !closed ? h("button", { class: "chip", onclick: () => toggleHuman([i.id], !isHuman(i)) }, h("span", { text: isHuman(i) ? "Clear Needs you" : "+ Needs you" })) : null)),
+        h("div", { class: "props-sec" },
+          h("div", { class: "props-head", text: "Dates" }),
+          prop("Created", h("span", { title: fmt(i.created_at), text: fmtDate(i.created_at) })),
+          prop("Updated", h("span", { style: isQuiet(i) ? "color:var(--orange)" : null, title: fmt(i.updated_at), text: `${ago(i.updated_at)} ago` })),
+          closed ? prop("Closed", h("span", { title: fmt(i.closed_at), text: fmtDate(i.closed_at) })) : null),
+        h("div", { class: "props-sec props-actions" },
+          h("div", { class: "props-head", text: "Actions" }),
+          h("button", { class: "btn btn-ghost btn-sm", onclick: () => copyMany([i.id]) }, icon("copy", "sm"), "Copy as Markdown"),
+          h("button", { class: "btn btn-ghost btn-sm", onclick: () => copy(agentPrompt(i), "Copied agent prompt") }, icon("sparkle", "sm"), "Copy agent prompt"),
+          closed ? h("button", { class: "btn btn-ghost btn-sm", onclick: () => doReopen([i.id]) }, icon("undo", "sm"), "Reopen")
+                 : h("button", { class: "btn btn-ghost btn-sm", onclick: () => closeDialog([i.id]) }, icon("circleCheck", "sm"), "Close…"),
+          h("button", { class: "btn btn-ghost btn-sm", style: "color:var(--red)", onclick: () => deleteDialog([i.id]) }, icon("trash", "sm"), "Delete…")))),
+  );
+}
+
+// ---------------------------------------------------------------- selection bar
+let selbar = null;
+function renderSelbar() {
+  const ids = [...state.selected];
+  document.body.classList.toggle("is-selecting", ids.length > 0);
+  if (!ids.length) { selbar?.remove(); selbar = null; return; }
+  if (!selbar) { selbar = h("div", { class: "selbar", role: "toolbar", "aria-label": "Selection" }); document.body.append(selbar); }
+  put(selbar, 
+    h("span", { class: "selbar-count", text: `${ids.length} selected` }),
+    h("button", { class: "btn btn-ghost btn-icon btn-sm", title: "Clear selection (Esc)", "aria-label": "Clear selection", onclick: () => { state.selected.clear(); render(); } }, icon("x", "sm")),
+    h("span", { class: "divider" }),
+    h("button", { class: "btn btn-ghost btn-sm", onclick: e => priorityMenu(e.currentTarget, ids) }, icon("sliders", "sm"), "Priority"),
+    h("button", { class: "btn btn-ghost btn-sm", onclick: e => statusMenu(e.currentTarget, ids) }, icon("circleCheck", "sm"), "Status"),
+    h("button", { class: "btn btn-ghost btn-sm", onclick: () => copyMany(ids) }, icon("copy", "sm"), "Copy"),
+    h("button", { class: "btn btn-sm", onclick: e => openMenu(e.currentTarget, actionsMenu(ids)) }, "Actions", icon("chevron", "sm")));
+}
+
+// ---------------------------------------------------------------- Toast component
+function toast(msg, { error = false, undo = null } = {}) {
+  const t = h("div", { class: `toast ${error ? "is-error" : ""}`, role: error ? "alert" : "status" },
+    icon(error ? "alert" : "circleCheck", "sm"), h("span", { class: "toast-msg", text: msg }),
+    undo ? h("button", { class: "btn btn-ghost btn-sm", onclick: async () => { t.remove(); await undo(); toast("Undone"); } }, icon("undo", "sm"), "Undo") : null);
+  $("#toasts").append(t);
+  setTimeout(() => t.remove(), undo ? 8000 : error ? 7000 : 2600);
+}
+
+// ---------------------------------------------------------------- folders
+function recents() { try { return JSON.parse(localGet("recents") || "[]"); } catch { return []; } }
+async function fetchRepos() { try { state.found = (await api("/api/repos")).found; } catch { state.found = []; } }
+async function switchRepo(raw) {
+  const prev = state.repo;
+  state.repo = raw.trim();
+  try {
+    const data = await api("/api/issues");
+    closeSheet(); state.selected.clear(); state.filters = [];
+    state.repo = data.repo;
+    localSet("repo", data.repo);
+    localSet("recents", JSON.stringify([data.repo, ...recents().filter(p => p !== data.repo)].slice(0, 8)));
+    const url = new URL(location.href); url.searchParams.set("repo", data.repo);
+    history.replaceState(null, "", url);
+    await load();
+    fetchRepos();
+    toast("Opened " + data.repo);
+  } catch (e) {
+    state.repo = prev;
+    toast(e.message, { error: true });
+  }
+}
+
+// ---------------------------------------------------------------- wiring
+$("#ws").addEventListener("click", e => workspaceMenu(e.currentTarget));
+$("#btn-filter").addEventListener("click", e => filterMenu(e.currentTarget));
+$("#btn-display").addEventListener("click", e => displayMenu(e.currentTarget));
+$("#btn-refresh").addEventListener("click", load);
+$("#q").addEventListener("input", e => { state.q = e.target.value; render(); });
+document.addEventListener("keydown", e => {
+  if (menu || document.querySelector(".overlay")) return;
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
+  if (e.key === "Escape") {
+    if (state.open) closeSheet();
+    else if (state.selected.size) { state.selected.clear(); render(); }
+    else if (typing) document.activeElement.blur();
+    return;
+  }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "/") { e.preventDefault(); $("#q").focus(); }
+  else if (e.key === "f") { e.preventDefault(); filterMenu($("#btn-filter")); }
+  else if (e.key === "r") load();
+  else if (e.key >= "1" && e.key <= "5") setView(VIEWS[+e.key - 1].key);
+});
+setInterval(() => { if (!document.hidden && !document.querySelector(".overlay") && !menu && !document.querySelector(".is-dragging")) load(); }, 20000);
+setInterval(tickLive, 5000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+render();
+fetchRepos();
+load();
+</script>
+</body>
+</html>
